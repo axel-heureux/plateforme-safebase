@@ -7,13 +7,14 @@ class Database
 
     private function __construct()
     {
-        $host = 'localhost';
-        $dbname = 'safebase';
-        $username = 'root';
-        $password = '';
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $port = getenv('DB_PORT') ?: '3308';
+        $dbname = getenv('DB_NAME') ?: 'safebase';
+        $username = getenv('DB_USER') ?: 'root';
+        $password = getenv('DB_PASSWORD') ?: '';
         $charset = 'utf8mb4';
 
-        $dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
+        $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 
         try {
             $this->pdo = new PDO(
