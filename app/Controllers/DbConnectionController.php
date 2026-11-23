@@ -19,7 +19,7 @@ class DbConnectionController extends BaseController
     // GET /api/connections
     public function index(): void
     {
-        $rows = $this->connections->getAll();
+        $rows = $this->connections->getAllForSession($this->sessionKey());
         foreach ($rows as &$row) {
             unset($row['password_enc']);
         }
@@ -41,7 +41,7 @@ class DbConnectionController extends BaseController
             $this->error('Moteur invalide (mysql ou postgresql attendu).');
         }
 
-        $id = $this->connections->add([
+        $id = $this->connections->addForSession([
             'name'         => $data['name'],
             'engine'       => $data['engine'],
             'host'         => $data['host'],
@@ -49,14 +49,14 @@ class DbConnectionController extends BaseController
             'db_name'      => $data['db_name'],
             'username'     => $data['username'],
             'password_enc' => Crypto::encrypt($data['password'] ?? ''),
-        ]);
+        ], $this->sessionKey());
 
         $this->logs->add([
             'level'   => 'info',
             'message' => "Connexion « {$data['name']} » ajoutée ({$data['engine']}).",
         ]);
 
-        $connection = $this->connections->getById($id);
+        $connection = $this->connections->getByIdForSession($id, $this->sessionKey());
         unset($connection['password_enc']);
 
         $this->json($connection, 201);
@@ -65,12 +65,12 @@ class DbConnectionController extends BaseController
     // DELETE /api/connections/{id}
     public function destroy($id): void
     {
-        $connection = $this->connections->getById($id);
+        $connection = $this->connections->getByIdForSession($id, $this->sessionKey());
         if (!$connection) {
             $this->error('Connexion introuvable.', 404);
         }
 
-        $this->connections->remove($id);
+        $this->connections->removeForSession($id, $this->sessionKey());
 
         $this->logs->add([
             'level'   => 'warning',
@@ -83,7 +83,7 @@ class DbConnectionController extends BaseController
     // GET /api/connections/{id}/test
     public function test($id): void
     {
-        $connection = $this->connections->getById($id);
+        $connection = $this->connections->getByIdForSession($id, $this->sessionKey());
         if (!$connection) {
             $this->error('Connexion introuvable.', 404);
         }

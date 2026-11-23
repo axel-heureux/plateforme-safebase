@@ -37,6 +37,12 @@ et `DB_PASSWORD`. Par défaut, l'application se connecte à la base Docker sur
 local uniquement. Si vous gardez MySQL WAMP sur le port 3306, configurez
 `DB_PORT=3306` dans l'environnement du processus Apache et redémarrez WAMP.
 
+Les connexions enregistrées dans l'interface sont associées à la session PHP
+du navigateur (`session_start`) : chaque navigateur/session ne voit et ne peut
+utiliser que ses propres connexions. Le cookie de session est HTTP-only et
+limité à la durée de la session du navigateur. Une colonne `session_id` est
+ajoutée automatiquement à `db_connections` lors du premier accès à l'API.
+
 Pour arrêter MySQL sans supprimer les données :
 
 ```powershell

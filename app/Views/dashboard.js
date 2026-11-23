@@ -1,12 +1,12 @@
 // Safebase — dashboard connecté à l'API PHP (App/Controllers/*).
-// Aucune donnée n'est simulée ici : chaque action appelle une vraie route /api/...
+// Les routes API sont relatives pour fonctionner dans un sous-dossier.
 
 const API = {
-  connections: '/api/connections',
-  backups: '/api/backups',
-  restores: '/api/restores',
-  schedules: '/api/schedules',
-  logs: '/api/logs',
+  connections: 'api/connections',
+  backups: 'api/backups',
+  restores: 'api/restores',
+  schedules: 'api/schedules',
+  logs: 'api/logs',
 };
 
 let data = { connections: [], backups: [], restores: [], schedules: [], logs: [] };

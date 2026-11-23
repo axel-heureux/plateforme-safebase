@@ -35,7 +35,7 @@ class ScheduleController extends BaseController
             $this->error('connection_id et cron_expression sont requis.');
         }
 
-        $connection = $this->connections->getById($connectionId);
+        $connection = $this->connections->getByIdForSession($connectionId, $this->sessionKey());
         if (!$connection) {
             $this->error('Connexion introuvable.', 404);
         }
@@ -76,7 +76,7 @@ class ScheduleController extends BaseController
             $this->schedules->edit($id, $fields);
         }
 
-        $connection = $this->connections->getById($schedule['connection_id']);
+        $connection = $this->connections->getByIdForSession($schedule['connection_id'], $this->sessionKey());
         if (array_key_exists('is_active', $fields)) {
             $state = $fields['is_active'] ? 'activée' : 'désactivée';
             $this->logs->add([
