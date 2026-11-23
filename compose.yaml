@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: safebase-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: safebase
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "127.0.0.1:${DB_PORT:-3308}:3306"
+    volumes:
+      - safebase_mysql_data:/var/lib/mysql
+      - ./docker/mysql/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  safebase_mysql_data:
