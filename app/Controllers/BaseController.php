@@ -2,6 +2,15 @@
 
 class BaseController
 {
+    protected function sessionKey(): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            throw new RuntimeException('La session PHP doit être démarrée avant le traitement de la requête.');
+        }
+
+        return hash('sha256', session_id());
+    }
+
     protected function json($data, int $status = 200): void
     {
         http_response_code($status);

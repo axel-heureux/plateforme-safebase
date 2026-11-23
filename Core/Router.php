@@ -40,6 +40,16 @@ class Router
     public function dispatch(string $method, string $uri): void
     {
         $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $scriptDirectory = str_replace('\\', '/', dirname($scriptName));
+        if ($scriptDirectory !== '.' && $scriptDirectory !== '/') {
+            if ($path === $scriptName) {
+                $path = '/';
+            } elseif (strpos($path, $scriptDirectory . '/') === 0) {
+                $path = substr($path, strlen($scriptDirectory));
+            }
+        }
+
         $path = rtrim($path, '/');
         if ($path === '') {
             $path = '/';

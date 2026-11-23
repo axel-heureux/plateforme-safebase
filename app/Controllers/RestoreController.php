@@ -43,7 +43,7 @@ class RestoreController extends BaseController
             $this->error('Sauvegarde introuvable ou invalide.', 404);
         }
 
-        $connection = $this->connections->getById($backup['connection_id']);
+        $connection = $this->connections->getByIdForSession($backup['connection_id'], $this->sessionKey());
         if (!$connection) {
             $this->error('Connexion introuvable.', 404);
         }

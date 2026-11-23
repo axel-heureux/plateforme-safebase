@@ -41,7 +41,7 @@ class BackupController extends BaseController
             $this->error('connection_id est requis.');
         }
 
-        $connection = $this->connections->getById($connectionId);
+        $connection = $this->connections->getByIdForSession($connectionId, $this->sessionKey());
         if (!$connection) {
             $this->error('Connexion introuvable.', 404);
         }
