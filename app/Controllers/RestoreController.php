@@ -6,6 +6,7 @@ require_once __DIR__ . '/../Models/BackupModel.php';
 require_once __DIR__ . '/../Models/DbConnectionModel.php';
 require_once __DIR__ . '/../Models/LogModel.php';
 require_once __DIR__ . '/../../Core/Crypto.php';
+require_once __DIR__ . '/../../Core/ConnectionHost.php';
 
 class RestoreController extends BaseController
 {
@@ -25,7 +26,12 @@ class RestoreController extends BaseController
     // GET /api/restores
     public function index(): void
     {
-        $this->json($this->restores->getAll());
+        $connectionIds = $this->connectionsForSession();
+        $rows = array_values(array_filter(
+            $this->restores->getAll(),
+            static fn(array $row): bool => in_array((int) $row['connection_id'], $connectionIds, true)
+        ));
+        $this->json($rows);
     }
 
     // POST /api/restores   body: { backup_id }
@@ -94,7 +100,7 @@ class RestoreController extends BaseController
         if ($connection['engine'] === 'mysql') {
             $cmd = sprintf(
                 'mysql --host=%s --port=%d --user=%s %s < %s 2>&1',
-                escapeshellarg($connection['host']),
+                escapeshellarg(ConnectionHost::resolve($connection['host'])),
                 (int) $connection['port'],
                 escapeshellarg($connection['username']),
                 escapeshellarg($connection['db_name']),
@@ -103,7 +109,7 @@ class RestoreController extends BaseController
         } else {
             $cmd = sprintf(
                 'psql --host=%s --port=%d --username=%s --dbname=%s --file=%s 2>&1',
-                escapeshellarg($connection['host']),
+                escapeshellarg(ConnectionHost::resolve($connection['host'])),
                 (int) $connection['port'],
                 escapeshellarg($connection['username']),
                 escapeshellarg($connection['db_name']),

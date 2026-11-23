@@ -42,5 +42,6 @@ $router->delete('/api/schedules/{id}', ['ScheduleController', 'destroy']);
 
 // Logs
 $router->get('/api/logs', ['LogController', 'index']);
+$router->get('/api/health', ['HealthController', 'index']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

@@ -48,3 +48,33 @@ Pour arrêter MySQL sans supprimer les données :
 ```powershell
 docker compose stop
 ```
+
+## MVP complet avec Docker
+
+La plateforme démarre par défaut avec l'API, son frontend, MySQL et le
+planificateur. PostgreSQL est facultatif pour ne pas bloquer le démarrage si
+son image Docker ne peut pas être téléchargée :
+
+```powershell
+docker compose up -d --build
+docker compose ps
+```
+
+Frontend : `http://127.0.0.1:8087/`
+
+Health check : `http://127.0.0.1:8087/api/health`
+
+Pour démarrer aussi la base PostgreSQL de démonstration :
+
+```powershell
+docker compose --profile postgres up -d --build
+```
+
+PostgreSQL de démonstration : `127.0.0.1:5433`, base `safebase_demo`,
+utilisateur `safebase`, mot de passe `safebase`.
+
+Pour une connexion enregistrée dans l'interface, utilise `db` comme hôte si la
+base est le service MySQL Compose. Pour une base qui tourne directement sur la
+machine Windows, utilise `host.docker.internal` (port MySQL WAMP habituel :
+`3306`). Depuis un conteneur, `localhost` désigne le conteneur lui-même et non
+la machine hôte.

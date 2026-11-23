@@ -1,4 +1,28 @@
 services:
+  app:
+    build:
+      context: .
+      args:
+        APP_ENV: development
+    container_name: safebase-app
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: safebase
+      DB_USER: root
+      DB_PASSWORD: ""
+      APP_KEY: safebase-dev-key-a-changer-en-prod
+    ports:
+      - "127.0.0.1:8087:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./storage/backups:/var/www/html/storage/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: mysql:8.0
     container_name: safebase-db
@@ -18,5 +42,43 @@ services:
       retries: 20
       start_period: 10s
 
+  postgres:
+    profiles:
+      - postgres
+    image: postgres:16
+    container_name: safebase-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: safebase_demo
+      POSTGRES_USER: safebase
+      POSTGRES_PASSWORD: safebase
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - safebase_postgres_data:/var/lib/postgresql/data
+
+  scheduler:
+    build:
+      context: .
+      args:
+        APP_ENV: development
+    container_name: safebase-scheduler
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: safebase
+      DB_USER: root
+      DB_PASSWORD: ""
+    command: ["php", "/var/www/html/scripts/scheduler.php"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./storage/backups:/var/www/html/storage/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   safebase_mysql_data:
+  safebase_postgres_data:

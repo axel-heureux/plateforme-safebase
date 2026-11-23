@@ -4,6 +4,7 @@ require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../Models/DbConnectionModel.php';
 require_once __DIR__ . '/../Models/LogModel.php';
 require_once __DIR__ . '/../../Core/Crypto.php';
+require_once __DIR__ . '/../../Core/ConnectionHost.php';
 
 class DbConnectionController extends BaseController
 {
@@ -94,7 +95,7 @@ class DbConnectionController extends BaseController
             $dsn = sprintf(
                 '%s:host=%s;port=%d;dbname=%s',
                 $driver,
-                $connection['host'],
+                ConnectionHost::resolve($connection['host']),
                 (int) $connection['port'],
                 $connection['db_name']
             );

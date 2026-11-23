@@ -72,9 +72,20 @@ class Router
                 array_shift($matches);
                 [$class, $action] = $route['handler'];
 
-                require_once __DIR__ . '/../App/Controllers/' . $class . '.php';
-                $controller = new $class();
-                call_user_func_array([$controller, $action], $matches);
+                $controllerDirectory = realpath(__DIR__ . '/../app/Controllers');
+                $controllerFile = $controllerDirectory
+                    ? $controllerDirectory . DIRECTORY_SEPARATOR . $class . '.php'
+                    : __DIR__ . '/../app/Controllers/' . $class . '.php';
+                try {
+                    require_once $controllerFile;
+                    $controller = new $class();
+                    call_user_func_array([$controller, $action], $matches);
+                } catch (Throwable $exception) {
+                    error_log((string) $exception);
+                    http_response_code(500);
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['error' => 'Erreur interne du serveur.']);
+                }
                 return;
             }
         }

@@ -9,7 +9,7 @@ class RestoreModel extends BaseModel
         parent::__construct('restores', 'id');
     }
 
-    public function getAll(array $conditions = [], array $orderBy = ['created_at DESC'], $limit = null): array
+    public function getAll(array $conditions = [], array $orderBy = ['started_at DESC'], $limit = null): array
     {
         return $this->findAll($conditions, $orderBy, $limit);
     }
@@ -19,7 +19,7 @@ class RestoreModel extends BaseModel
         return $this->findById($id);
     }
 
-    public function getOne(array $conditions = [], array $orderBy = ['created_at DESC']): ?array
+    public function getOne(array $conditions = [], array $orderBy = ['started_at DESC']): ?array
     {
         return $this->findOne($conditions, $orderBy);
     }
