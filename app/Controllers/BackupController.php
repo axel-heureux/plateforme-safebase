@@ -5,6 +5,7 @@ require_once __DIR__ . '/../Models/BackupModel.php';
 require_once __DIR__ . '/../Models/DbConnectionModel.php';
 require_once __DIR__ . '/../Models/LogModel.php';
 require_once __DIR__ . '/../../Core/Crypto.php';
+require_once __DIR__ . '/../../Core/ConnectionHost.php';
 
 class BackupController extends BaseController
 {
@@ -28,7 +29,12 @@ class BackupController extends BaseController
     // GET /api/backups
     public function index(): void
     {
-        $this->json($this->backups->getAll());
+        $connectionIds = $this->connectionsForSession();
+        $rows = array_values(array_filter(
+            $this->backups->getAll(),
+            static fn(array $row): bool => in_array((int) $row['connection_id'], $connectionIds, true)
+        ));
+        $this->json($rows);
     }
 
     // POST /api/backups   body: { connection_id, type: 'manual'|'auto' }
@@ -84,29 +90,33 @@ class BackupController extends BaseController
     private function runDump(array $connection): array
     {
         $password = Crypto::decrypt($connection['password_enc']);
-        $filename = sprintf('%s_%s.sql', $connection['db_name'], date('Ymd_His'));
+        $databaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $connection['db_name']);
+        $filename = sprintf('%s_%s.sql', $databaseName, date('Ymd_His'));
         $filepath = $this->storagePath . '/' . $filename;
+        $errorPath = $filepath . '.err';
 
         putenv('MYSQL_PWD=' . $password);
         putenv('PGPASSWORD=' . $password);
 
         if ($connection['engine'] === 'mysql') {
             $cmd = sprintf(
-                'mysqldump --host=%s --port=%d --user=%s %s > %s 2>&1',
-                escapeshellarg($connection['host']),
+                'mysqldump --host=%s --port=%d --user=%s %s > %s 2> %s',
+                escapeshellarg(ConnectionHost::resolve($connection['host'])),
                 (int) $connection['port'],
                 escapeshellarg($connection['username']),
                 escapeshellarg($connection['db_name']),
-                escapeshellarg($filepath)
+                escapeshellarg($filepath),
+                escapeshellarg($errorPath)
             );
         } else {
             $cmd = sprintf(
-                'pg_dump --host=%s --port=%d --username=%s --dbname=%s --file=%s 2>&1',
-                escapeshellarg($connection['host']),
+                'pg_dump --host=%s --port=%d --username=%s --dbname=%s --file=%s 2> %s',
+                escapeshellarg(ConnectionHost::resolve($connection['host'])),
                 (int) $connection['port'],
                 escapeshellarg($connection['username']),
                 escapeshellarg($connection['db_name']),
-                escapeshellarg($filepath)
+                escapeshellarg($filepath),
+                escapeshellarg($errorPath)
             );
         }
 
@@ -115,10 +125,18 @@ class BackupController extends BaseController
         putenv('MYSQL_PWD');
         putenv('PGPASSWORD');
 
-        if ($exitCode !== 0 || !file_exists($filepath)) {
+        $error = is_file($errorPath) ? trim((string) file_get_contents($errorPath)) : '';
+        if (is_file($errorPath)) {
+            unlink($errorPath);
+        }
+
+        if ($exitCode !== 0 || !is_file($filepath) || filesize($filepath) === 0) {
+            if (is_file($filepath)) {
+                unlink($filepath);
+            }
             return [
                 'success' => false,
-                'error'   => trim(implode("\n", $output)) ?: 'La commande de sauvegarde a échoué.',
+                'error'   => $error ?: trim(implode("\n", $output)) ?: 'La commande de sauvegarde a échoué.',
             ];
         }
 

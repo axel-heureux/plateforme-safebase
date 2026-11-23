@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../Models/DbConnectionModel.php';
+
 class BaseController
 {
     protected function sessionKey(): string
@@ -9,6 +11,16 @@ class BaseController
         }
 
         return hash('sha256', session_id());
+    }
+
+    protected function connectionsForSession(): array
+    {
+        $model = new DbConnectionModel();
+        $connections = $model->getAllForSession($this->sessionKey());
+        return array_map(
+            static fn(array $connection): int => (int) $connection['id'],
+            $connections
+        );
     }
 
     protected function json($data, int $status = 200): void

@@ -21,7 +21,12 @@ class ScheduleController extends BaseController
     // GET /api/schedules
     public function index(): void
     {
-        $this->json($this->schedules->getAll());
+        $connectionIds = $this->connectionsForSession();
+        $rows = array_values(array_filter(
+            $this->schedules->getAll(),
+            static fn(array $row): bool => in_array((int) $row['connection_id'], $connectionIds, true)
+        ));
+        $this->json($rows);
     }
 
     // POST /api/schedules   body: { connection_id, cron_expression }
@@ -61,6 +66,13 @@ class ScheduleController extends BaseController
         if (!$schedule) {
             $this->error('Planification introuvable.', 404);
         }
+        $ownedConnection = $this->connections->getByIdForSession(
+            $schedule['connection_id'],
+            $this->sessionKey()
+        );
+        if (!$ownedConnection) {
+            $this->error('Planification introuvable.', 404);
+        }
 
         $data = $this->input();
         $fields = [];
@@ -93,6 +105,13 @@ class ScheduleController extends BaseController
     {
         $schedule = $this->schedules->getById($id);
         if (!$schedule) {
+            $this->error('Planification introuvable.', 404);
+        }
+        $ownedConnection = $this->connections->getByIdForSession(
+            $schedule['connection_id'],
+            $this->sessionKey()
+        );
+        if (!$ownedConnection) {
             $this->error('Planification introuvable.', 404);
         }
 

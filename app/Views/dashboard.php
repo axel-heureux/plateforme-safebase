@@ -51,7 +51,7 @@
       </header>
 
       <section class="view active" id="view-connections">
-        <p class="helptext">Chaque connexion pointe vers une base MySQL ou PostgreSQL. Le mot de passe est chiffré avant d'être enregistré.</p>
+        <p class="helptext">Chaque connexion pointe vers une base MySQL ou PostgreSQL. Si la base tourne sur la machine hôte de Docker, utilise « host.docker.internal » comme hôte ; pour la base Compose, utilise « db ».</p>
 
         <div class="card form-panel" id="formConnection">
           <div class="form-grid">
@@ -68,7 +68,7 @@
             </div>
             <div class="field">
               <label for="c-host">Hôte</label>
-              <input id="c-host" placeholder="db01.internal">
+              <input id="c-host" placeholder="host.docker.internal">
             </div>
             <div class="field">
               <label for="c-port">Port</label>

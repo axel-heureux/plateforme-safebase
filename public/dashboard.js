@@ -1,4 +1,4 @@
-// Safebase — dashboard connecté à l'API PHP (App/Controllers/*).
+// Safebase — dashboard connecté à l'API PHP.
 // Les routes API sont relatives pour fonctionner dans un sous-dossier.
 
 const API = {
@@ -7,6 +7,7 @@ const API = {
   restores: 'api/restores',
   schedules: 'api/schedules',
   logs: 'api/logs',
+  health: 'api/health',
 };
 
 let data = { connections: [], backups: [], restores: [], schedules: [], logs: [] };
@@ -17,8 +18,13 @@ async function api(url, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
-  let body = null;
-  try { body = await res.json(); } catch (e) { /* réponse vide */ }
+  const responseText = await res.text();
+  let body;
+  try {
+    body = JSON.parse(responseText);
+  } catch (e) {
+    throw new Error(`Réponse API invalide (${res.status}) pour ${url}.`);
+  }
   if (!res.ok) {
     throw new Error((body && (body.error || body.message)) || `Erreur ${res.status}`);
   }
@@ -26,23 +32,35 @@ async function api(url, options = {}) {
 }
 
 async function loadAll() {
-  try {
-    const [connections, backups, restores, schedules, logs] = await Promise.all([
-      api(API.connections),
-      api(API.backups),
-      api(API.restores),
-      api(API.schedules),
-      api(API.logs),
-    ]);
-    data = { connections, backups, restores, schedules, logs };
-    setFooter(true);
-  } catch (e) {
-    setFooter(false, e.message);
-    toast('Impossible de joindre l\u2019API : ' + e.message, true);
-  }
+  const endpoints = [
+    ['connections', API.connections],
+    ['backups', API.backups],
+    ['restores', API.restores],
+    ['schedules', API.schedules],
+    ['logs', API.logs],
+  ];
+  const results = await Promise.allSettled(endpoints.map(([, url]) => api(url)));
+  const errors = [];
+
+  results.forEach((result, index) => {
+    const [key, url] = endpoints[index];
+    if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+      data[key] = result.value;
+    } else {
+      const error = result.status === 'rejected'
+        ? result.reason
+        : new Error(`Réponse invalide pour ${url}.`);
+      errors.push(`${key}: ${error.message}`);
+    }
+  });
+
+  setFooter(errors.length === 0, errors.join('; '));
   renderAll();
   populateSelect('b-conn');
   populateSelect('s-conn');
+  if (errors.length) {
+    toast('Certaines données n\u2019ont pas pu être chargées : ' + errors.join(' | '), true);
+  }
 }
 
 function setFooter(ok, message) {

@@ -1,2 +1,5 @@
 /docker/mysql/initdb/*.sql
 /.env
+/vendor/
+/.phpunit.cache/
+/storage/backups/*

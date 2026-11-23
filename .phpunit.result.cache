@@ -1,0 +1,1 @@
+{"version":1,"defects":{"RouterTest::testIndexRouteAcceptsIndexPhpUrl":3},"times":{"CryptoTest::testEncryptAndDecryptPassword":0.001,"CryptoTest::testEmptyPasswordRemainsEmpty":0,"RouterTest::testNestedApiPrefixIsNormalized":0.004,"RouterTest::testIndexRouteAcceptsIndexPhpUrl":0,"ConnectionHostTest::testNamedDatabaseHostIsPreserved":0.007}}
